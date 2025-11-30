@@ -1,0 +1,17 @@
+openai
+langchain
+langchain-openai
+langchain-chroma
+langchain-core
+chromadb
+beautifulsoup4
+lxml
+requests
+python-dotenv
+pydantic-settings
+pyyaml
+chainlit
+tenacity
+langfuse>=2.0.0
+fastapi
+uvicorn

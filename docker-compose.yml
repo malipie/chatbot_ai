@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  estetino-bot:
+    build: .
+    container_name: estetino_bot_pro
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./chroma_db:/app/chroma_db # Persystencja bazy wektorowej
+      - ./config.yaml:/app/config.yaml # Możliwość zmiany configu bez rebuilda
+    env_file:
+      - .env
+    restart: always
