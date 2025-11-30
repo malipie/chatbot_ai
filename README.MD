@@ -1,4 +1,4 @@
-# Estetino AI Advisor
+# AI Advisor
 
 Inteligentny asystent sprzedażowy typu RAG (Retrieval Augmented Generation) dla sklepu e-commerce.
 
