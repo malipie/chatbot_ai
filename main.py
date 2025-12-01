@@ -1,58 +1,75 @@
 import os
 import chainlit as cl
-from fastapi import Request
+from fastapi import Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from core.rag_engine import initialize_database, get_rag_response
+from fastapi_limiter import FastAPILimiter
+from fastapi_limiter.depends import RateLimiter
+from core.rag_engine import initialize_database, get_rag_response, get_redis
 from core.settings import settings
 
 # --- KONFIGURACJA STARTOWA ---
+
 @cl.on_chat_start
 async def start():
-    print("🚀 Start sesji czatu...")
-    # Inicjalizacja bazy przy starcie (tylko raz)
-    initialize_database()
-    
     # Wiadomość powitalna
     await cl.Message(content=f"Cześć! Jestem asystentem sklepu {settings.shop_name}. W czym mogę pomóc?").send()
 
-# --- OBSŁUGA UI CHAINLIT ---
 @cl.on_message
 async def main(message: cl.Message):
-    response = get_rag_response(message.content)
+    # 👇 POPRAWKA TUTAJ: Dodane 'await' przed wywołaniem funkcji
+    response = await get_rag_response(message.content)
     await cl.Message(content=response).send()
 
-# --- API DLA WIDGETU JS ---
+# --- SETUP FASTAPI (Dla Widgetu) ---
 from chainlit.server import app
 
-# Dodajemy Middleware TYLKO jeśli jeszcze go nie ma (zapobiega błędom przy reloadzie)
-# Sprawdzamy czy CORS już jest w aplikacji
-middleware_exists = any(m.cls == CORSMiddleware for m in app.user_middleware)
+# 1. Inicjalizacja przy starcie serwera
+@app.on_event("startup")
+async def startup():
+    print("🚀 Start serwera: Inicjalizacja Redis i Bazy...")
+    # Inicjalizacja limitera z Redisem
+    try:
+        redis = await get_redis()
+        await FastAPILimiter.init(redis)
+        # Inicjalizacja bazy wektorowej (tylko raz)
+        await initialize_database()
+    except Exception as e:
+        print(f"⚠️ Błąd inicjalizacji startowej: {e}")
 
-if not middleware_exists:
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["*"],
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+# 2. CORS (Dostęp dla widgetu)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], # W produkcji zmień na konkretną domenę
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-@app.post("/api/chat")
-async def api_chat(request: Request):
-    data = await request.json()
-    user_message = data.get("message", "")
-    
-    if not user_message:
-        return {"reply": "Pusta wiadomość."}
+# 3. Endpoint API (z Rate Limiterem!)
+@app.post("/api/chat", dependencies=[])
+async def api_chat(
+    request: Request,
+    # Ograniczenie: 20 zapytań na minutę z jednego IP
+    limit = RateLimiter(times=20, minutes=1) 
+):
+    try:
+        data = await request.json()
+        user_message = data.get("message", "")
         
-    response_text = get_rag_response(user_message)
-    return {"reply": response_text}
+        if not user_message:
+            return {"reply": "Pusta wiadomość."}
+            
+        # 👇 POPRAWKA TUTAJ RÓWNIEŻ: Dodane 'await'
+        response_text = await get_rag_response(user_message)
+        return {"reply": response_text}
+        
+    except Exception as e:
+        print(f"Błąd API: {e}")
+        return {"reply": "Wystąpił błąd serwera."}
 
-# Serwowanie pliku widget.js
+# 4. Serwowanie widgetu
 from fastapi.staticfiles import StaticFiles
-import os
 if not os.path.exists("static"): os.makedirs("static")
-# Montowanie static files tylko raz
 try:
     app.mount("/static", StaticFiles(directory="static"), name="static")
 except RuntimeError:
-    pass # Ignorujemy błąd jeśli już zamontowane
+    pass

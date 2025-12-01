@@ -1,14 +1,25 @@
 version: '3.8'
 
 services:
+  # Baza danych w pamięci RAM dla cache i limitów
+  redis:
+    image: redis:7-alpine
+    container_name: estetino_redis
+    ports:
+      - "6380:6379"
+    restart: always
+
   estetino-bot:
     build: .
     container_name: estetino_bot_pro
     ports:
       - "8000:8000"
     volumes:
-      - ./chroma_db:/app/chroma_db # Persystencja bazy wektorowej
-      - ./config.yaml:/app/config.yaml # Możliwość zmiany configu bez rebuilda
+      - ./chroma_db:/app/chroma_db
+      - ./config.yaml:/app/config.yaml
+      - ./static:/app/static
     env_file:
       - .env
+    depends_on:
+      - redis
     restart: always
