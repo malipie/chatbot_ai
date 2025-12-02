@@ -1,10 +1,10 @@
-# Estetino AI Advisor - Serverless RAG Chatbot
+# AI Advisor - Serverless RAG Chatbot
 
 Profesjonalny, skalowalny asystent sprzedażowy oparty na architekturze **RAG (Retrieval Augmented Generation)**, wdrożony w modelu Serverless na Google Cloud Run.
 
 Projekt rozwiązuje problem nawigacji po ofercie e-commerce, pozwalając klientom pytać językiem naturalnym (np. *"Szukam eleganckich szpilek na wesele"*), zamiast korzystać ze skomplikowanych filtrów.
 
-## Kluczowe Funkcje (Enterprise Grade)
+## Kluczowe Funkcje (Enterprise Grade) 
 
 * **Cloud-Native Vector Search:** Wykorzystuje **Qdrant Cloud** jako bazę wektorową, zapewniając błyskawiczny start aplikacji (brak indeksowania przy starcie kontenera) i trwałość danych.
 * **Smart Caching (Redis):** Dwuwarstwowy system cache z **normalizacją zapytań** (Fuzzy Caching). Powtarzające się pytania są obsługiwane w <20ms bez kosztów OpenAI.
