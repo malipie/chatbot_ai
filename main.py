@@ -16,7 +16,6 @@ async def start():
 
 @cl.on_message
 async def main(message: cl.Message):
-    # 👇 POPRAWKA TUTAJ: Dodane 'await' przed wywołaniem funkcji
     response = await get_rag_response(message.content)
     await cl.Message(content=response).send()
 
@@ -37,9 +36,12 @@ async def startup():
         print(f"⚠️ Błąd inicjalizacji startowej: {e}")
 
 # 2. CORS (Dostęp dla widgetu)
+origins_str = os.environ.get("ALLOWED_ORIGINS", "*")
+origins = origins_str.split(",")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # W produkcji zmień na konkretną domenę
+    allow_origins=origins, 
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -58,7 +60,6 @@ async def api_chat(
         if not user_message:
             return {"reply": "Pusta wiadomość."}
             
-        # 👇 POPRAWKA TUTAJ RÓWNIEŻ: Dodane 'await'
         response_text = await get_rag_response(user_message)
         return {"reply": response_text}
         

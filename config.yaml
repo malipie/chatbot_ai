@@ -1,3 +1,5 @@
 xml_url: "https://estetino.pl/data/export/googleshoppingpl_121461690ca3b8031a5c51d2.xml"
 shop_name: "Estetino"
+collection_name: "estetino_products"
+langfuse_prompt_name: "estetino-advisor"
 system_prompt: "Jesteś pomocnym asystentem sklepu Estetino. Doradzasz w wyborze butów i torebek. Bądź uprzejmy i profesjonalny."
