@@ -15,7 +15,6 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./chroma_db:/app/chroma_db
       - ./config.yaml:/app/config.yaml
       - ./static:/app/static
     env_file:

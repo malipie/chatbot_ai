@@ -190,6 +190,8 @@ async def get_rag_response(user_query: str):
             model=model_name,
             temperature=temperature,
             api_key=settings.openai_api_key
+            max_tokens=800,
+            request_timeout=30
         )
         
         response = await model.ainvoke(
@@ -202,6 +204,9 @@ async def get_rag_response(user_query: str):
         raw_answer = response.content
     except Exception as e:
         logger.error(f"❌ [OPENAI] Błąd: {e}")
+        if langfuse_handler:
+            try: langfuse_handler.flush()
+            except: pass
         return "Przepraszam, problem z połączeniem."
 
     # 5. SANITYZACJA
